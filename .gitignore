@@ -1,0 +1,67 @@
+# Python / Virtual Environment
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Tooling Caches (Testing & Type Checking)
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+.nox/
+coverage/
+
+# Script / generated data
+samples/
+out/
+*.log
+logs/
+
+# Environment / Secrets
+.env
+.env.*
+!.env.example
+
+# IDE / Editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Docker
+# (volumes are managed by compose; no local override secrets)
