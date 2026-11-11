@@ -46,12 +46,12 @@ class SourceImage:
     @property
     def width(self) -> int:
         """Return image width in pixels."""
-        return self.pixels.shape[1]
+        return int(self.pixels.shape[1])
 
     @property
     def height(self) -> int:
         """Return image height in pixels."""
-        return self.pixels.shape[0]
+        return int(self.pixels.shape[0])
 
     @property
     def channels(self) -> int:
@@ -59,4 +59,4 @@ class SourceImage:
         if self.pixels.ndim == 2:
             return 1
 
-        return self.pixels.shape[2]
+        return int(self.pixels.shape[2])
