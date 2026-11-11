@@ -1,0 +1,75 @@
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "omr-pipeline"
+version = "0.1.0"
+description = "A computer vision pipeline for converting sheet music images into structured MusicXML."
+readme = "README.md"
+requires-python = ">=3.14"
+license = "MIT"
+
+authors = [
+    { name = "Dave Bunyan" },
+]
+
+keywords = [
+    "omr",
+    "optical-music-recognition",
+    "musicxml",
+    "computer-vision",
+    "deep-learning",
+    "pytorch",
+    "violin",
+    "sheet-music",
+    "music-information-retrieval",
+]
+
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+]
+
+dependencies = [
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+    "pre-commit",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/omr_pipeline"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
