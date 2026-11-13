@@ -1,6 +1,7 @@
 """Image preprocessing and ingestion functionality."""
 
 from omr_pipeline.preprocessing.binarization import (
+    apply_adaptive_threshold,
     apply_otsu_threshold,
     apply_threshold,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "ImageLoadError",
     "load_image",
     "convert_to_grayscale",
+    "apply_adaptive_threshold",
     "apply_threshold",
     "apply_otsu_threshold",
 ]
