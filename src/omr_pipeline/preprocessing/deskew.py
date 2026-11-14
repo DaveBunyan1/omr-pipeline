@@ -60,3 +60,12 @@ def rotate_image(
     )
 
     return np.array(rotated, dtype=np.uint8, copy=True)
+
+
+def estimate_skew_angle(
+    source: SourceImage,
+    max_skew: float = 5.0,
+    angle_step: float = 0.1,
+) -> float:
+    """Estimate the correction angle for a slightly skewed sheet music image."""
+    ...
