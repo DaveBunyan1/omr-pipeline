@@ -6,6 +6,7 @@ import pytest
 from omr_pipeline.models.source_image import SourceImage
 from omr_pipeline.preprocessing.deskew import (
     calculate_horizontal_projection,
+    calculate_projection_score,
     create_foreground_mask,
 )
 
@@ -181,3 +182,27 @@ def test_create_foreground_mask_preserves_image_metadata():
 
     assert source.source_name == "test.png"
     assert source.source_format == "PNG"
+
+
+def test_calculate_projection_score():
+    projection = np.array([0, 4, 0, 5])
+
+    result = calculate_projection_score(projection)
+
+    assert result == pytest.approx(np.var(projection))
+
+
+def test_calculate_projection_score_uniform_profile():
+    projection = np.array([5, 5, 5, 5])
+
+    result = calculate_projection_score(projection)
+
+    assert result == 0.0
+
+
+def test_calculate_projection_score_returns_python_float():
+    projection = np.array([0, 4, 0, 5])
+
+    result = calculate_projection_score(projection)
+
+    assert isinstance(result, float)

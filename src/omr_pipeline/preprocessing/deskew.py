@@ -26,3 +26,10 @@ def create_foreground_mask(
     foreground_mask: NDArray[np.uint8] = (threshold.pixels == 0).astype(np.uint8)
 
     return foreground_mask
+
+
+def calculate_projection_score(
+    projection: NDArray[np.integer],
+) -> float:
+    """Calculate the variance of a horizontal projection profile."""
+    return float(np.var(projection))
