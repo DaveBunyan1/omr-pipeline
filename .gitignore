@@ -26,6 +26,9 @@ coverage.xml
 .nox/
 coverage/
 
+# Test data sample pictures
+tests/data
+
 # Script / generated data
 samples/
 out/
