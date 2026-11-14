@@ -8,6 +8,7 @@ from omr_pipeline.preprocessing.deskew import (
     calculate_horizontal_projection,
     calculate_projection_score,
     create_foreground_mask,
+    rotate_image,
 )
 
 
@@ -206,3 +207,96 @@ def test_calculate_projection_score_returns_python_float():
     result = calculate_projection_score(projection)
 
     assert isinstance(result, float)
+
+
+def test_rotate_image_by_zero_degrees():
+    image = np.zeros((10, 20), dtype=np.uint8)
+    image[2:5, 5:15] = 1
+
+    result = rotate_image(image, 0.0)
+
+    np.testing.assert_array_equal(result, image)
+
+
+def test_rotate_image_by_90_degrees():
+    image = np.zeros((10, 20), dtype=np.uint8)
+    image[2:5, 5:15] = 1
+
+    result = rotate_image(image, 90.0)
+
+    assert result.shape == (20, 10)
+
+
+def test_rotate_image_by_180_degrees():
+    image = np.zeros((10, 20), dtype=np.uint8)
+    image[2:5, 5:15] = 1
+
+    result = rotate_image(image, 180.0)
+
+    assert result.shape == image.shape
+    np.testing.assert_array_equal(result, np.rot90(image, 2))
+
+
+def test_rotate_image_by_small_angle_expands_dimensions():
+    image = np.zeros((100, 200), dtype=np.uint8)
+    image[20:25, 20:180] = 1
+
+    result = rotate_image(image, 5.0)
+
+    assert result.shape[0] > image.shape[0]
+    assert result.shape[1] > image.shape[1]
+
+
+def test_rotate_image_contains_only_binary_values():
+    image = np.zeros((50, 50), dtype=np.uint8)
+    image[10:20, 10:40] = 1
+
+    result = rotate_image(image, 3.0)
+
+    assert set(np.unique(result)).issubset({0, 1})
+
+
+def test_rotate_image_returns_uint8():
+    image = np.zeros((50, 50), dtype=np.uint8)
+
+    result = rotate_image(image, 3.0)
+
+    assert result.dtype == np.uint8
+
+
+def test_rotate_image_fills_exposed_areas_with_zero():
+    image = np.ones((50, 50), dtype=np.uint8)
+
+    result = rotate_image(image, 5.0)
+
+    assert np.any(result == 0)
+
+
+def test_rotate_image_does_not_modify_original_image():
+    image = np.zeros((50, 50), dtype=np.uint8)
+    image[10:20, 10:40] = 1
+
+    original = image.copy()
+
+    rotate_image(image, 5.0)
+
+    np.testing.assert_array_equal(image, original)
+
+
+@pytest.mark.parametrize("ndim", [1, 3])
+def test_rotate_image_rejects_non_2d_input(ndim: int):
+    image = np.ones((10,) * ndim, dtype=np.uint8)
+
+    with pytest.raises(ValueError):
+        rotate_image(image, 5.0)
+
+
+@pytest.mark.parametrize(
+    "angle",
+    [float("inf"), float("-inf"), float("nan")],
+)
+def test_rotate_image_rejects_non_finite_angles(angle: float):
+    image = np.zeros((50, 50), dtype=np.uint8)
+
+    with pytest.raises(ValueError):
+        rotate_image(image, angle)

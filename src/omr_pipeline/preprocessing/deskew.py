@@ -1,5 +1,8 @@
+import math
+
 import numpy as np
 from numpy.typing import NDArray
+from PIL import Image
 
 from omr_pipeline.models.source_image import SourceImage
 from omr_pipeline.preprocessing.binarization import apply_otsu_threshold
@@ -33,3 +36,27 @@ def calculate_projection_score(
 ) -> float:
     """Calculate the variance of a horizontal projection profile."""
     return float(np.var(projection))
+
+
+def rotate_image(
+    image: NDArray[np.uint8],
+    angle: float,
+) -> NDArray[np.uint8]:
+    """Rotate an image by the specified angle."""
+
+    if image.ndim != 2:
+        raise ValueError("Expected a 2D image.")
+
+    if not math.isfinite(angle):
+        raise ValueError("Angle must be finite.")
+
+    img = Image.fromarray(image)
+
+    rotated = img.rotate(
+        angle,
+        resample=Image.Resampling.NEAREST,
+        expand=True,
+        fillcolor=0,
+    )
+
+    return np.array(rotated, dtype=np.uint8, copy=True)
