@@ -5,7 +5,7 @@ STAFF_LINES = 5
 
 @dataclass(frozen=True, slots=True)
 class Staff:
-    line_positions: tuple[float, float, float, float, float]
+    line_positions: tuple[float, ...]
 
     def __post_init__(self) -> None:
         if len(self.line_positions) != STAFF_LINES:
@@ -14,7 +14,7 @@ class Staff:
         if tuple(sorted(self.line_positions)) != self.line_positions:
             raise ValueError("Staff lines must be ordered from top to bottom.")
 
-        if len(set(self.line_positions)) != 5:
+        if len(set(self.line_positions)) != STAFF_LINES:
             raise ValueError("Staff lines must have distinct positions.")
 
     @property

@@ -1,6 +1,11 @@
+import math
+from collections.abc import Sequence
+from itertools import pairwise
+
 import numpy as np
 from numpy.typing import NDArray
 
+from omr_pipeline.models.staff import STAFF_LINES, Staff
 from omr_pipeline.preprocessing.deskew import calculate_horizontal_projection
 
 
@@ -45,3 +50,44 @@ def group_line_positions(
     grouped_line_positions.append((start + prev) / 2)
 
     return grouped_line_positions
+
+
+def is_valid_staff_spacing(
+    line_positions: tuple[float, ...], tolerance: float = 0.2
+) -> bool:
+    if len(line_positions) != STAFF_LINES:
+        return False
+
+    if isinstance(tolerance, bool):
+        raise TypeError("Tolerance must be a finite number greater than 0.")
+
+    if not math.isfinite(tolerance) or tolerance < 0:
+        raise ValueError("Tolerance must be a finite number greater than 0.")
+
+    gaps = [curr - prev for prev, curr in pairwise(line_positions)]
+
+    if any(gap <= 0 for gap in gaps):
+        return False
+
+    avg_gap = sum(gaps) / len(gaps)
+    return all(math.isclose(gap, avg_gap, rel_tol=tolerance) for gap in gaps)
+
+
+def detect_staffs(
+    line_positions: Sequence[float],
+) -> list[Staff]:
+    staffs = []
+    index = 0
+
+    while index <= len(line_positions) - STAFF_LINES:
+        window = tuple(line_positions[index : index + STAFF_LINES])
+
+        if is_valid_staff_spacing(window):
+            staff = Staff(window)
+            staffs.append(staff)
+
+            index += STAFF_LINES
+        else:
+            index += 1
+
+    return staffs
