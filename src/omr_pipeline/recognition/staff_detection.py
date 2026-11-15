@@ -5,8 +5,12 @@ from itertools import pairwise
 import numpy as np
 from numpy.typing import NDArray
 
+from omr_pipeline.models.source_image import SourceImage
 from omr_pipeline.models.staff import STAFF_LINES, Staff
-from omr_pipeline.preprocessing.deskew import calculate_horizontal_projection
+from omr_pipeline.preprocessing.deskew import (
+    calculate_horizontal_projection,
+    create_foreground_mask,
+)
 
 
 def detect_horizontal_lines(
@@ -91,3 +95,18 @@ def detect_staffs(
             index += 1
 
     return staffs
+
+
+def detect_staffs_from_image(
+    source: SourceImage,
+) -> list[Staff]:
+    if source.pixels.ndim != 2:
+        raise ValueError(f"Expected grayscale format, got {source.pixels.ndim} array.")
+
+    foreground_mask = create_foreground_mask(source)
+
+    lines = detect_horizontal_lines(foreground_mask)
+
+    grouped_lines = group_line_positions(lines)
+
+    return detect_staffs(grouped_lines)

@@ -6,6 +6,7 @@ from omr_pipeline.models.staff import Staff
 from omr_pipeline.recognition.staff_detection import (
     detect_horizontal_lines,
     detect_staffs,
+    detect_staffs_from_image,
     group_line_positions,
     is_valid_staff_spacing,
 )
@@ -318,3 +319,112 @@ class TestDetectStaffs:
         staffs = detect_staffs(line_positions)
 
         assert all(isinstance(staff, Staff) for staff in staffs)
+
+
+class TestDetectStaffsFromImage:
+    def test_detects_single_staff(self, synthetic_staff_image: SourceImage):
+        staffs = detect_staffs_from_image(synthetic_staff_image)
+
+        assert len(staffs) == 1
+        assert staffs[0].line_positions == (
+            90.5,
+            105.5,
+            120.5,
+            135.5,
+            150.5,
+        )
+
+    def test_detects_multiple_staffs(self, synthetic_staff_image: SourceImage):
+        pixels = synthetic_staff_image.pixels.copy()
+
+        staff_spacing = 15
+        staff_thickness = 2
+        second_staff_line = 165
+
+        for i in range(5):
+            y = second_staff_line + (i * staff_spacing)
+            pixels[y : y + staff_thickness, 20:380] = 0
+
+        source = SourceImage(
+            pixels=pixels,
+            source_name="multiple_staffs.png",
+            source_format="PNG",
+        )
+
+        staffs = detect_staffs_from_image(source)
+
+        assert len(staffs) == 2
+
+        assert staffs[0].line_positions == (
+            90.5,
+            105.5,
+            120.5,
+            135.5,
+            150.5,
+        )
+
+        assert staffs[1].line_positions == (
+            165.5,
+            180.5,
+            195.5,
+            210.5,
+            225.5,
+        )
+
+    def test_returns_empty_list_when_no_staff_is_detected(self):
+        pixels = np.full((240, 400), 255, dtype=np.uint8)
+
+        source = SourceImage(
+            pixels=pixels,
+            source_name="blank.png",
+            source_format="PNG",
+        )
+
+        assert detect_staffs_from_image(source) == []
+
+    def test_rejects_rgb_image(self, synthetic_staff_image: SourceImage):
+        rgb_pixels = np.repeat(
+            synthetic_staff_image.pixels[:, :, np.newaxis],
+            3,
+            axis=2,
+        )
+
+        source = SourceImage(
+            pixels=rgb_pixels,
+            source_name="rgb.png",
+            source_format="PNG",
+        )
+
+        with pytest.raises(ValueError, match="Expected grayscale format"):
+            detect_staffs_from_image(source)
+
+    def test_rejects_rgba_image(self, synthetic_staff_image: SourceImage):
+        rgba_pixels = np.repeat(
+            synthetic_staff_image.pixels[:, :, np.newaxis],
+            4,
+            axis=2,
+        )
+
+        source = SourceImage(
+            pixels=rgba_pixels,
+            source_name="rgba.png",
+            source_format="PNG",
+        )
+
+        with pytest.raises(ValueError, match="Expected grayscale format"):
+            detect_staffs_from_image(source)
+
+    def test_returns_staff_instances(self, synthetic_staff_image: SourceImage):
+        staffs = detect_staffs_from_image(synthetic_staff_image)
+
+        assert all(isinstance(staff, Staff) for staff in staffs)
+
+    def test_does_not_modify_source_image(self, synthetic_staff_image: SourceImage):
+        original_pixels = synthetic_staff_image.pixels.copy()
+
+        detect_staffs_from_image(synthetic_staff_image)
+
+        np.testing.assert_array_equal(
+            synthetic_staff_image.pixels,
+            original_pixels,
+        )
