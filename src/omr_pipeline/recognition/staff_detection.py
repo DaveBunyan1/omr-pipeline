@@ -20,3 +20,28 @@ def detect_horizontal_lines(
     line_positions: list[int] = np.where(projections >= threshold)[0].tolist()
 
     return line_positions
+
+
+def group_line_positions(
+    line_positions: list[int],
+) -> list[float]:
+    if not line_positions:
+        return []
+
+    grouped_line_positions = []
+
+    start = line_positions[0]
+    prev = line_positions[0]
+
+    for current in line_positions[1:]:
+        if current == prev + 1:
+            prev = current
+            continue
+
+        grouped_line_positions.append((start + prev) / 2)
+        start = current
+        prev = current
+
+    grouped_line_positions.append((start + prev) / 2)
+
+    return grouped_line_positions
