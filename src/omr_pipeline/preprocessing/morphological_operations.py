@@ -55,3 +55,11 @@ def dilate_horizontal(
         result[:, offset : offset + image.shape[1]] |= image
 
     return result
+
+
+def morphological_opening(
+    image: NDArray[np.bool_],
+    kernel_length: int,
+) -> NDArray[np.bool_]:
+    eroded = erode_horizontal(image, kernel_length)
+    return dilate_horizontal(eroded, kernel_length)
