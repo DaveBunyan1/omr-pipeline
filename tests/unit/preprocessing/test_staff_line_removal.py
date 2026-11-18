@@ -4,6 +4,7 @@ import pytest
 from omr_pipeline.models import SourceImage
 from omr_pipeline.preprocessing.staff_line_removal import (
     extract_horizontal_lines,
+    remove_staff_lines,
 )
 
 
@@ -133,3 +134,72 @@ def test_extract_horizontal_lines_rejects_rgba_images() -> None:
 
     with pytest.raises(ValueError, match="grayscale"):
         extract_horizontal_lines(source, kernel_length=5)
+
+
+def test_remove_staff_lines_removes_horizontal_lines() -> None:
+    pixels = np.full((5, 20), 255, dtype=np.uint8)
+    pixels[2, :] = 0
+
+    source = create_source_image(pixels)
+
+    result = remove_staff_lines(source, kernel_length=10)
+
+    expected = np.full((5, 20), 255, dtype=np.uint8)
+
+    np.testing.assert_array_equal(result.pixels, expected)
+
+
+def test_remove_staff_lines_preserves_short_features() -> None:
+    pixels = np.full((5, 20), 255, dtype=np.uint8)
+
+    # Short horizontal feature.
+    pixels[1, 2:5] = 0
+
+    # Vertical feature.
+    pixels[1:4, 10] = 0
+
+    source = create_source_image(pixels)
+
+    result = remove_staff_lines(source, kernel_length=10)
+
+    np.testing.assert_array_equal(result.pixels, pixels)
+
+
+def test_remove_staff_lines_preserves_source_metadata() -> None:
+    pixels = np.full((5, 20), 255, dtype=np.uint8)
+    source = create_source_image(pixels)
+
+    result = remove_staff_lines(source, kernel_length=10)
+
+    assert result.source_name == source.source_name
+    assert result.source_format == source.source_format
+
+
+def test_remove_staff_lines_preserves_original_dimensions() -> None:
+    pixels = np.full((5, 20), 255, dtype=np.uint8)
+    source = create_source_image(pixels)
+
+    result = remove_staff_lines(source, kernel_length=10)
+
+    assert result.pixels.shape == source.pixels.shape
+
+
+def test_remove_staff_lines_does_not_modify_source() -> None:
+    pixels = np.full((5, 20), 255, dtype=np.uint8)
+    pixels[2, :] = 0
+
+    source = create_source_image(pixels)
+    original = source.pixels.copy()
+
+    remove_staff_lines(source, kernel_length=10)
+
+    np.testing.assert_array_equal(source.pixels, original)
+
+
+def test_remove_staff_lines_returns_uint8_image() -> None:
+    pixels = np.full((5, 20), 255, dtype=np.uint8)
+    source = create_source_image(pixels)
+
+    result = remove_staff_lines(source, kernel_length=10)
+
+    assert result.pixels.dtype == np.uint8

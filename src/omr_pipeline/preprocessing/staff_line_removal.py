@@ -22,3 +22,24 @@ def extract_horizontal_lines(
     foreground_mask = source.pixels == 0
 
     return morphological_opening(foreground_mask, kernel_length)
+
+
+def remove_staff_lines(
+    source: SourceImage,
+    kernel_length: int,
+) -> SourceImage:
+    """Remove extracted horizontal lines from a binary image."""
+
+    horizontal_lines = extract_horizontal_lines(
+        source,
+        kernel_length,
+    )
+
+    cleaned_pixels = source.pixels.copy()
+    cleaned_pixels[horizontal_lines] = 255
+
+    return SourceImage(
+        pixels=cleaned_pixels,
+        source_name=source.source_name,
+        source_format=source.source_format,
+    )
