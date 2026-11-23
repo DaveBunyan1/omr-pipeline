@@ -1,10 +1,14 @@
+from typing import cast
+
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from omr_pipeline.models import SourceImage
 from omr_pipeline.preprocessing.staff_line_removal import (
     extract_horizontal_lines,
     remove_staff_lines,
+    repair_staff_line_intersections,
 )
 
 
@@ -203,3 +207,110 @@ def test_remove_staff_lines_returns_uint8_image() -> None:
     result = remove_staff_lines(source, kernel_length=10)
 
     assert result.pixels.dtype == np.uint8
+
+
+def test_repairs_vertical_structure_crossing_staff_line() -> None:
+    pixels = np.full((7, 7), 255, dtype=np.uint8)
+
+    # Vertical structure crossing a horizontal staff line.
+    pixels[1:6, 3] = 0
+
+    # Horizontal line crossing the vertical structure.
+    pixels[3, :] = 0
+
+    source = SourceImage(
+        pixels=pixels,
+        source_name="test.png",
+        source_format="PNG",
+    )
+
+    horizontal_lines = np.zeros((7, 7), dtype=np.bool_)
+    horizontal_lines[3, :] = True
+
+    repaired = repair_staff_line_intersections(
+        source,
+        horizontal_lines,
+    )
+
+    assert repaired.pixels[3, 3] == 0
+    assert repaired.pixels[3, 2] == 255
+    assert repaired.pixels[3, 4] == 255
+
+
+def test_does_not_repair_without_vertical_support() -> None:
+    pixels = np.full((7, 7), 255, dtype=np.uint8)
+
+    pixels[3, :] = 0
+
+    source = SourceImage(
+        pixels=pixels,
+        source_name="test.png",
+        source_format="PNG",
+    )
+
+    horizontal_lines = np.zeros((7, 7), dtype=np.bool_)
+    horizontal_lines[3, :] = True
+
+    repaired = repair_staff_line_intersections(
+        source,
+        horizontal_lines,
+    )
+
+    assert np.all(repaired.pixels[3, :] == 255)
+
+
+def test_does_not_modify_source() -> None:
+    pixels = np.full((7, 7), 255, dtype=np.uint8)
+    pixels[1:6, 3] = 0
+    pixels[3, :] = 0
+
+    source = SourceImage(
+        pixels=pixels,
+        source_name="test.png",
+        source_format="PNG",
+    )
+    original = source.pixels.copy()
+
+    horizontal_lines = np.zeros((7, 7), dtype=np.bool_)
+    horizontal_lines[3, :] = True
+
+    repair_staff_line_intersections(
+        source,
+        horizontal_lines,
+    )
+
+    np.testing.assert_array_equal(source.pixels, original)
+
+
+def test_rejects_mask_shape_mismatch() -> None:
+    pixels = np.full((7, 7), 255, dtype=np.uint8)
+    source = SourceImage(
+        pixels=pixels,
+        source_name="test.png",
+        source_format="PNG",
+    )
+
+    horizontal_lines = np.zeros((5, 5), dtype=np.bool_)
+
+    with pytest.raises(ValueError):
+        repair_staff_line_intersections(
+            source,
+            horizontal_lines,
+        )
+
+
+def test_rejects_non_boolean_mask() -> None:
+    pixels = np.full((7, 7), 255, dtype=np.uint8)
+    source = SourceImage(
+        pixels=pixels,
+        source_name="test.png",
+        source_format="PNG",
+    )
+
+    horizontal_lines = np.zeros((7, 7), dtype=np.uint8)
+
+    with pytest.raises(TypeError):
+        repair_staff_line_intersections(
+            source,
+            cast(NDArray[np.bool_], horizontal_lines),
+        )
